@@ -1,4 +1,4 @@
-# HƯỚNG DẪN CHẠY THỰC NGHIỆM LUẬN VĂN THẠC SĨ
+# HƯỚNG DẪN CHẠY THỰC NGHIỆM
 **Đề tài:** Phát hiện Tin giả dựa trên Đồ thị Tri thức (Knowledge Graph) kết hợp Mô hình Ngôn ngữ lớn (LLM - BERT).
 **Bộ dữ liệu (Dataset):** COVID-19 (AAAI-2021).
 
@@ -61,9 +61,5 @@ python src/pipeline/3_kg_embedding.py
 ```bash
 python src/main.py --dataset AAAI
 ```
-*(Lưu ý: Bạn phải dùng tham số `--dataset AAAI` thay vì FakeNewsNet).*
 
 ---
-
-## 💡 MẸO GHI CHÉP KẾT QUẢ:
-Khi chạy xong **Lệnh 4**, màn hình sẽ in ra điểm số **Accuracy** và **F1-Score**. Bạn hãy copy lại các con số này ra một file Word hoặc Excel để sau này vẽ Biểu đồ So sánh trong cuốn Luận văn nhé! Chúc bạn thành công!
