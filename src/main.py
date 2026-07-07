@@ -22,7 +22,7 @@ def arg_parser():
 
     # GNN related parameters
     parser.add_argument('--epochs', type=int, default=500, help='Number of epochs to train.default=200,[50, 100, 150, 200, 300]')
-    parser.add_argument('--hidden_channels', type=int, default=128, help='Dim of 1st layer GNN. 32,64,128,256, default=256')
+    parser.add_argument('--hidden_channels', type=int, default=256, help='Dim of 1st layer GNN. 32,64,128,256, default=256')
     parser.add_argument('--gnn_layers', type=int, default=2, help='Number of GNN layers. 2,3, default=2')
     parser.add_argument('--learning_rate', default=0.0005, help='Learning rate of the optimiser. 0.0001, 0.001, default=0.0005')
     parser.add_argument('--weight_decay', default=5e-4, help='Weight decay of the optimiser. default=5e-4')

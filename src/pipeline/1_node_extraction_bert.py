@@ -101,7 +101,7 @@ def main():
         print("Model 'sentence_transformers' not found. Please run: pip install sentence-transformers")
         return
         
-    sbert_model = SentenceTransformer('all-MiniLM-L6-v2')
+    sbert_model = SentenceTransformer('all-mpnet-base-v2')
     
     # News features (BERT Embeddings 384-dim)
     print("  - Encoding News Texts...")

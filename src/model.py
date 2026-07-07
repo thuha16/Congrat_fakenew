@@ -10,7 +10,7 @@ from torch_geometric.datasets import OGB_MAG
 from torch_geometric.nn import HeteroConv, GCNConv, SAGEConv, GATConv, GATv2Conv, Linear
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score, precision_score, f1_score, roc_auc_score, recall_score, roc_curve
-from torch.nn import ReLU, Sigmoid, Softmax
+from torch.nn import ReLU, Sigmoid, Softmax, Dropout
 import matplotlib.pyplot as plt
 import sklearn.metrics as sm
 import numpy as np
@@ -125,6 +125,7 @@ class Congrat(torch.nn.Module):
 
         self.lin1 = Linear(64, out_channels)
         self.lin2 = Linear(hidden_channels*3, out_channels)
+        self.dropout = Dropout(p=0.5)
 
     def l2_norm(self,input,axis = 1):
         norm = torch.norm(input,2,axis,True)
@@ -157,6 +158,9 @@ class Congrat(torch.nn.Module):
         aug_three = self.projection(x_dict['news'])
         news_embeddings = torch.cat([aug_one,aug_two], dim=1)
         news_embeddings = torch.cat([news_embeddings,aug_three], dim=1)
+        
+        # Áp dụng Dropout trước khi qua lớp Linear cuối cùng để chống Overfitting
+        news_embeddings = self.dropout(news_embeddings)
         
         return aug_one, aug_two, aug_three, self.lin2(news_embeddings) 
     

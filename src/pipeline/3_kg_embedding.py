@@ -83,10 +83,10 @@ def main():
     print("2. Đang tra cứu Wikidata Embeddings (512-dim)...")
     wiki_vectors = load_pretrained_embeddings(WIKIDATA_PRETRAINED_FILE, target_qnodes, 512)
     
-    print("3. Khởi tạo Semantic Knowledge Branch (128-dim) bằng BERT...")
+    print("3. Khởi tạo Semantic Knowledge Branch (256-dim) bằng BERT MPNet...")
     try:
         from sentence_transformers import SentenceTransformer
-        sbert_model = SentenceTransformer('all-MiniLM-L6-v2')
+        sbert_model = SentenceTransformer('all-mpnet-base-v2')
         print("Đang mã hóa ý nghĩa tên thực thể...")
         semantic_embeddings = sbert_model.encode(entities, show_progress_bar=True)
     except ImportError:
@@ -108,8 +108,8 @@ def main():
         else:
             kg_transe[ent] = np.random.normal(0, 0.1, 512).astype(np.float32)
             
-        # Semantic Branch (Ngữ nghĩa LLM) - Lấy 128 chiều đầu tiên của BERT (384-dim)
-        dbpedia_transe[ent] = semantic_embeddings[i][:128].astype(np.float32)
+        # Semantic Branch (Ngữ nghĩa LLM) - Lấy 256 chiều đầu tiên của MPNet (768-dim)
+        dbpedia_transe[ent] = semantic_embeddings[i][:256].astype(np.float32)
             
     print(f"Wikidata: Tìm thấy {found_wiki}/{len(entities)} vector thực tế.")
     print(f"Semantic Branch: 100% sử dụng BERT Embeddings.")
