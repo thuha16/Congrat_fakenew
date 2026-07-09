@@ -18,6 +18,9 @@ def clean_text(text):
     text = re.sub(r'http\S+|www.\S+', '', text)
     # Xóa ký tự đặc biệt vô nghĩa
     text = re.sub(r'[^\w\s#@]', '', text)
+    # Gộp mọi khoảng trắng (bao gồm xuống dòng nội bộ) thành một dấu cách,
+    # tránh entity spaCy trích ra chứa ký tự xuống dòng làm hỏng mapindex.txt
+    text = re.sub(r'\s+', ' ', text)
     return text.strip()
 
 def main():
@@ -74,8 +77,11 @@ def main():
         if i % 100 == 0:
             print(f"  Processed {i}/{len(texts)} articles for entities")
         # Giới hạn text length để tránh spacy chạy quá lâu
-        doc = nlp(text[:5000]) 
+        doc = nlp(text[:5000])
         ents = [ent.text.lower() for ent in doc.ents if ent.label_ in ['PERSON', 'ORG', 'GPE', 'LOC', 'EVENT']]
+        # Purely-numeric entity text (e.g. mistagged case counts) collides with the
+        # digit-string news node IDs used throughout the graph construction/loading code.
+        ents = [e for e in ents if not e.isdigit()]
         ents = list(set(ents))
         news_entities.append(ents)
         all_entities.update(ents)

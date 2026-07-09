@@ -11,13 +11,9 @@ from torch_geometric.nn import HeteroConv, GCNConv, SAGEConv, GATConv, GATv2Conv
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score, precision_score, f1_score, roc_auc_score, recall_score, roc_curve
 from torch.nn import ReLU, Sigmoid, Softmax, Dropout
-import matplotlib.pyplot as plt
 import sklearn.metrics as sm
 import numpy as np
 
-from torch_geometric.nn import MessagePassing, GINConv, GATConv
-from torch_geometric.utils import add_self_loops, degree, softmax, to_dense_adj, dense_to_sparse
-from torch_scatter import scatter_add
 import math
 import numpy as np
 

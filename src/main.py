@@ -58,7 +58,8 @@ if __name__ == "__main__":
     
         # unsup_train(model, hgraph, args)
         train(model, hgraph, args)
-    
+
+        model.eval()
         with torch.no_grad():
             # test(model, hgraph, args, i)
             test(model, hgraph, args)

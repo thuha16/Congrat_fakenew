@@ -26,18 +26,22 @@ def content_nodes(g):
 def load_dataset(dataset):
     root_dir = "./data/"
     if dataset == "AAAI":
-        dataset_name = "AAAI2021_COVID19_fake_news/completed_data/"
-    if dataset == "FakeNewsNet":
-        dataset_name = "FakeNewsNet/completed_data/"
-    if dataset == "ISOT":
-        dataset_name = "ISOT/completed_data/"
-    if dataset == "Liar":
-        dataset_name = "LIAR_PANTS/completed_data/"
-    if dataset == "PAN2020":
-        dataset_name = "pan2020/completed_data/"
-    
-    dataset_dir = root_dir + dataset_name
-    dataset_name = dataset_name.split("/")[0]
+        # pipeline scripts write into data/COVID19/completed_data/ with an
+        # AAAI2021_COVID19_fake_news.* filename prefix, not a directory of that name.
+        dataset_dir = root_dir + "COVID19/completed_data/"
+        dataset_name = "AAAI2021_COVID19_fake_news"
+    else:
+        if dataset == "FakeNewsNet":
+            dataset_name = "FakeNewsNet/completed_data/"
+        if dataset == "ISOT":
+            dataset_name = "ISOT/completed_data/"
+        if dataset == "Liar":
+            dataset_name = "LIAR_PANTS/completed_data/"
+        if dataset == "PAN2020":
+            dataset_name = "pan2020/completed_data/"
+
+        dataset_dir = root_dir + dataset_name
+        dataset_name = dataset_name.split("/")[0]
     print("Dataset: " + dataset_name)
     
     News_Dict = dict()
@@ -194,9 +198,9 @@ def load_dataset(dataset):
     with open(dataset_dir + 'ent_attr_DBpedia_transe.pkl', 'rb') as f:
         kg1 = pickle.load(f)
 
-    entity_kg_attr = torch.zeros((len(Entity_Dict), 512))
+    entity_kg_attr = torch.zeros((len(Entity_Dict), 100))
     # new add
-    entity_kg1_attr = torch.zeros((len(Entity_Dict), 128))
+    entity_kg1_attr = torch.zeros((len(Entity_Dict), 256))
 
     for ent in kg:
         idx = int(Entity_Dict[str(mapindex[str(ent)])])

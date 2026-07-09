@@ -6,7 +6,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
 def main():
-    data_dir = "../data/FakeNewsNet/completed_data"
+    data_dir = "../data/COVID19/completed_data"
     
     print("Loading intermediate data...")
     with open(os.path.join(data_dir, "intermediate_data.pkl"), 'rb') as f:
