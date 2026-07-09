@@ -1,12 +1,13 @@
 import os
+import argparse
 import pickle
 import networkx as nx
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
-def main():
-    data_dir = "../data/FakeNewsNet/completed_data"
+def main(args):
+    data_dir = f"../data/{args.dataset}/completed_data"
     
     print("Loading intermediate data...")
     with open(os.path.join(data_dir, "intermediate_data.pkl"), 'rb') as f:
@@ -91,4 +92,7 @@ def main():
     print("Done graph construction!")
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Pipeline 2: Graph Construction")
+    parser.add_argument('--dataset', type=str, default='COVID19', help='Dataset to process (e.g., COVID19, Liar)')
+    args = parser.parse_args()
+    main(args)

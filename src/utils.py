@@ -25,14 +25,14 @@ def content_nodes(g):
 
 def load_dataset(dataset):
     root_dir = "./data/"
-    if dataset == "AAAI":
-        dataset_name = "AAAI2021_COVID19_fake_news/completed_data/"
+    if dataset == "COVID19":
+        dataset_name = "COVID19/completed_data/"
     if dataset == "FakeNewsNet":
         dataset_name = "FakeNewsNet/completed_data/"
     if dataset == "ISOT":
         dataset_name = "ISOT/completed_data/"
     if dataset == "Liar":
-        dataset_name = "LIAR_PANTS/completed_data/"
+        dataset_name = "Liar/completed_data/"
     if dataset == "PAN2020":
         dataset_name = "pan2020/completed_data/"
     

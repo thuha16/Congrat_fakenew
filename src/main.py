@@ -14,7 +14,7 @@ from model import Congrat, train, test
 def arg_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', type=int, default=7, help='Random seed.')
-    parser.add_argument('--dataset', type=str, default='AAAI', help="['AAAI', 'FakeNewsNet', 'Liar', 'PAN2020')")
+    parser.add_argument('--dataset', type=str, default='COVID19', help="['AAAI', 'FakeNewsNet', 'Liar', 'PAN2020')")
     # new add
     parser.add_argument("--batch_size", type=int, default=200, help='set the batch size of the training data into our models')
     # parser.add_argument("--kg_sel", type=int, defalut=1, help="Using this parameter can choose different KG.")
@@ -46,20 +46,38 @@ if __name__ == "__main__":
     args.device = device
     hgraph = shuffle_data(hgraph, args)
 
+    acc_list, prec_list, rec_list, f1_list = [], [], [], []
     for i in range(10):
-
+        print(f"\n--- Run {i+1}/10 ---")
         model = Congrat(hidden_channels=args.hidden_channels, out_channels=2, num_layers=args.gnn_layers)
         model.to(device)
         hgraph.to(device)
-        # print(hgraph.y_dict)
+        
         # Initialize parameters via lazy initialization
         with torch.no_grad():  # Initialize lazy modules.
             _, _, _, out = model(hgraph.x_dict, hgraph.edge_index_dict)
     
-        # unsup_train(model, hgraph, args)
         train(model, hgraph, args)
     
         with torch.no_grad():
-            # test(model, hgraph, args, i)
-            test(model, hgraph, args)
+            acc, prec, rec, f1 = test(model, hgraph, args)
+            acc_list.append(acc)
+            prec_list.append(prec)
+            rec_list.append(rec)
+            f1_list.append(f1)
             
+    # IN KẾT QUẢ TỔNG HỢP (FINAL RESULTS)
+    print("\n" + "="*55)
+    print("FINAL RESULTS AFTER 10 RUNS (BẢNG KẾT QUẢ TỔNG HỢP)")
+    print("="*55)
+    print(f"{'Metric':<12} | {'Mean':<8} | {'Std':<8} | {'Min':<8} | {'Max':<8}")
+    print("-" * 55)
+    
+    def print_stat(name, arr):
+        print(f"{name:<12} | {np.mean(arr):.4f}   | {np.std(arr):.4f}   | {np.min(arr):.4f}   | {np.max(arr):.4f}")
+        
+    print_stat("Accuracy", acc_list)
+    print_stat("Precision", prec_list)
+    print_stat("Recall", rec_list)
+    print_stat("F1-Score", f1_list)
+    print("="*55 + "\n")

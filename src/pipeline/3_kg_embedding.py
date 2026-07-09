@@ -1,4 +1,5 @@
 import os
+import argparse
 import pickle
 import numpy as np
 import requests
@@ -58,8 +59,8 @@ def load_pretrained_embeddings(filepath, entity_ids, dim):
                         break
     return embeddings
 
-def main():
-    data_dir = "../data/COVID19/completed_data"
+def main(args):
+    data_dir = f"../data/{args.dataset}/completed_data"
     
     # ĐƯỜNG DẪN TỚI FILE WIKIDATA TRÊN SERVER (Tải từ OpenKE)
     WIKIDATA_PRETRAINED_FILE = "../data/pretrained/wikidata5m_transe.txt"
@@ -124,4 +125,7 @@ def main():
     print("Đã hoàn thành Knowledge Graph Embedding (Real Wikidata + LLM Semantic)!")
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Pipeline 3: Knowledge Graph Embedding")
+    parser.add_argument('--dataset', type=str, default='COVID19', help='Dataset to process (e.g., COVID19, Liar)')
+    args = parser.parse_args()
+    main(args)

@@ -1,4 +1,5 @@
 import os
+import argparse
 import pandas as pd
 import numpy as np
 import spacy
@@ -20,24 +21,39 @@ def clean_text(text):
     text = re.sub(r'[^\w\s#@]', '', text)
     return text.strip()
 
-def main():
-    data_dir = "../data/COVID19"
+def main(args):
+    dataset_name = args.dataset
+    data_dir = f"../data/{dataset_name}"
     out_dir = os.path.join(data_dir, "completed_data")
     os.makedirs(out_dir, exist_ok=True)
     
     # 1. Load Data
-    print("Loading COVID19 datasets...")
-    train_df = pd.read_csv(os.path.join(data_dir, "Constraint_Train.csv"))
-    val_df = pd.read_csv(os.path.join(data_dir, "Constraint_Val.csv"))
-    test_df = pd.read_csv(os.path.join(data_dir, "english_test_with_labels.csv"))
+    print(f"Loading {dataset_name} datasets...")
     
-    df = pd.concat([train_df, val_df, test_df], ignore_index=True)
-    
-    # Map nhãn dán: fake = 1, real = 0
-    df['label'] = df['label'].apply(lambda x: 1 if str(x).lower() == 'fake' else 0)
-    
-    # Cột chứa văn bản của bộ này tên là 'tweet'
-    df['text'] = df['tweet']
+    if dataset_name == "COVID19":
+        train_df = pd.read_csv(os.path.join(data_dir, "Constraint_Train.csv"))
+        val_df = pd.read_csv(os.path.join(data_dir, "Constraint_Val.csv"))
+        test_df = pd.read_csv(os.path.join(data_dir, "english_test_with_labels.csv"))
+        df = pd.concat([train_df, val_df, test_df], ignore_index=True)
+        # Map nhãn dán: fake = 1, real = 0
+        df['label'] = df['label'].apply(lambda x: 1 if str(x).lower() == 'fake' else 0)
+        # Cột chứa văn bản của bộ này tên là 'tweet'
+        df['text'] = df['tweet']
+        
+    elif dataset_name == "Liar":
+        train_df = pd.read_csv(os.path.join(data_dir, "train.tsv"), sep='\t', header=None)
+        val_df = pd.read_csv(os.path.join(data_dir, "valid.tsv"), sep='\t', header=None)
+        test_df = pd.read_csv(os.path.join(data_dir, "test.tsv"), sep='\t', header=None)
+        df = pd.concat([train_df, val_df, test_df], ignore_index=True)
+        
+        # Nhãn giả bao gồm: pants-fire, false, barely-true
+        fake_labels = ['pants-fire', 'false', 'barely-true']
+        df['label'] = df[1].apply(lambda x: 1 if str(x).lower() in fake_labels else 0)
+        # Cột 2 chứa văn bản câu nói
+        df['text'] = df[2]
+        
+    else:
+        raise ValueError("Unsupported dataset! Please use COVID19 or Liar.")
     
     # Tiền xử lý (Cleaning & Filtering)
     print("Cleaning and filtering data...")
@@ -49,7 +65,7 @@ def main():
     print(f"Dropped {initial_len - len(df)} short/spam tweets. Total valid tweets: {len(df)}")
     
     # XUẤT FILE MINH CHỨNG CHO HỘI ĐỒNG
-    csv_out_path = os.path.join(data_dir, "AAAI2021_COVID19_Cleaned_Merged.csv")
+    csv_out_path = os.path.join(data_dir, f"{dataset_name}_Cleaned_Merged.csv")
     df[['text', 'label']].to_csv(csv_out_path, index=False, encoding='utf-8')
     print(f"Đã xuất file minh chứng gộp ra: {csv_out_path}")
     
@@ -124,7 +140,6 @@ def main():
     
     # 5. Save Outputs
     print("Saving node features...")
-    dataset_name = "AAAI2021_COVID19_fake_news"
     
     mapindex = {}
     
@@ -179,8 +194,11 @@ def main():
         
     # Thống kê cho bài báo
     num_fake = df['label'].sum()
-    print(f"Dataset COVID-19: #News {len(news_ids)} | #Entities {len(entities)} | #Topics {num_topics} | #Fake {num_fake}")
+    print(f"Dataset {dataset_name}: #News {len(news_ids)} | #Entities {len(entities)} | #Topics {num_topics} | #Fake {num_fake}")
     print("Done node extraction!")
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Pipeline 1: Node Extraction")
+    parser.add_argument('--dataset', type=str, default='COVID19', help='Dataset to process (e.g., COVID19, Liar)')
+    args = parser.parse_args()
+    main(args)

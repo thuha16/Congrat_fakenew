@@ -228,6 +228,16 @@ def test(model, data, args):
     # f1_2  = f1_score(y, pred, pos_label=0)
 
     auc = roc_auc_score(y, pred,)
+    # Trích xuất thống kê Dataset
+    num_news = data['news'].num_nodes
+    num_entities = data['entity'].num_nodes
+    num_topics = data['topic'].num_nodes
+    num_fake = int(data['news'].y.sum().item())
+    num_real = num_news - num_fake
+    
     print(f"Testing Acc: {acc:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f},F1: {f1:.4f}")
     with open("./Para_analysis.txt", "a+", encoding="utf8") as f:
+        f.write(f"Dataset Stats: #News={num_news}, #Fake={num_fake}, #Real={num_real}, #Entities={num_entities}, #Topics={num_topics} | ")
         f.write(f"epoch: {args.epochs}; hidden_channels: {args.hidden_channels} ; Acc:{acc:.4f}; Precision: {precision:.4f}; Recall: {recall:.4f}; F1: {f1:.4f} \n")
+        
+    return acc, precision, recall, f1
