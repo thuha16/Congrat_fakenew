@@ -25,23 +25,19 @@ def content_nodes(g):
 
 def load_dataset(dataset):
     root_dir = "./data/"
-    if dataset == "AAAI":
-        # pipeline scripts write into data/COVID19/completed_data/ with an
-        # AAAI2021_COVID19_fake_news.* filename prefix, not a directory of that name.
-        dataset_dir = root_dir + "COVID19/completed_data/"
-        dataset_name = "AAAI2021_COVID19_fake_news"
-    else:
-        if dataset == "FakeNewsNet":
-            dataset_name = "FakeNewsNet/completed_data/"
-        if dataset == "ISOT":
-            dataset_name = "ISOT/completed_data/"
-        if dataset == "Liar":
-            dataset_name = "LIAR_PANTS/completed_data/"
-        if dataset == "PAN2020":
-            dataset_name = "pan2020/completed_data/"
-
-        dataset_dir = root_dir + dataset_name
-        dataset_name = dataset_name.split("/")[0]
+    if dataset == "COVID19":
+        dataset_name = "COVID19/completed_data/"
+    if dataset == "FakeNewsNet":
+        dataset_name = "FakeNewsNet/completed_data/"
+    if dataset == "ISOT":
+        dataset_name = "ISOT/completed_data/"
+    if dataset == "Liar":
+        dataset_name = "Liar/completed_data/"
+    if dataset == "PAN2020":
+        dataset_name = "pan2020/completed_data/"
+    
+    dataset_dir = root_dir + dataset_name
+    dataset_name = dataset_name.split("/")[0]
     print("Dataset: " + dataset_name)
     
     News_Dict = dict()
