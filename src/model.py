@@ -44,7 +44,7 @@ def semi_loss(z1: torch.Tensor, z2: torch.Tensor):
 
 
 class Congrat(torch.nn.Module):
-    def __init__(self, hidden_channels, out_channels, num_layers):
+    def __init__(self, hidden_channels, out_channels, num_layers, dropout_rate=0.5):
         super().__init__()
 
         self.convs = torch.nn.ModuleList()
@@ -125,7 +125,7 @@ class Congrat(torch.nn.Module):
 
         self.lin1 = Linear(64, out_channels)
         self.lin2 = Linear(hidden_channels*3, out_channels)
-        self.dropout = Dropout(p=0.5)
+        self.dropout = Dropout(p=dropout_rate)
 
     def l2_norm(self,input,axis = 1):
         norm = torch.norm(input,2,axis,True)
