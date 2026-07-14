@@ -13,14 +13,22 @@ warnings.filterwarnings('ignore')
 
 import re
 
-def clean_text(text):
+def clean_text_covid(text):
     text = str(text)
     # Xóa URL
     text = re.sub(r'http\S+|www.\S+', '', text)
-    # Xóa ký tự đặc biệt vô nghĩa
+    # Xóa ký tự đặc biệt vô nghĩa (Chỉ dùng cho COVID-19 Twitter)
     text = re.sub(r'[^\w\s#@]', '', text)
     # Gộp mọi khoảng trắng (bao gồm xuống dòng nội bộ) thành một dấu cách,
     # tránh entity spaCy trích ra chứa ký tự xuống dòng làm hỏng mapindex.txt
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
+
+def clean_text_liar(text):
+    text = str(text)
+    # Xóa URL
+    text = re.sub(r'http\S+|www.\S+', '', text)
+    # Dọn dẹp khoảng trắng thừa nhưng GIỮ NGUYÊN DẤU CÂU (.,!?"'-)
     text = re.sub(r'\s+', ' ', text)
     return text.strip()
 
@@ -52,15 +60,24 @@ def main(args):
         # Nhãn giả bao gồm: pants-fire, false, barely-true
         fake_labels = ['pants-fire', 'false', 'barely-true']
         df['label'] = df[1].apply(lambda x: 1 if str(x).lower() in fake_labels else 0)
-        # Cột 2 chứa văn bản câu nói
-        df['text'] = df[2]
+        
+        # Xử lý NaN trước khi nối chuỗi
+        for col in [2, 3, 4, 7, 13]:
+            df[col] = df[col].fillna('unknown')
+            
+        # FEATURE CONCATENATION CHO LIAR
+        # Cột 4: Speaker, Cột 7: Party, Cột 3: Subject, Cột 13: Context, Cột 2: Statement
+        df['text'] = df[4].astype(str) + " from " + df[7].astype(str) + " party said about " + df[3].astype(str) + " in " + df[13].astype(str) + ": " + df[2].astype(str)
         
     else:
         raise ValueError("Unsupported dataset! Please use COVID19 or Liar.")
     
     # Tiền xử lý (Cleaning & Filtering)
     print("Cleaning and filtering data...")
-    df['text'] = df['text'].apply(clean_text)
+    if dataset_name == "COVID19":
+        df['text'] = df['text'].apply(clean_text_covid)
+    elif dataset_name == "Liar":
+        df['text'] = df['text'].apply(clean_text_liar)
     
     # Lọc bỏ tin rác < 5 từ
     initial_len = len(df)
