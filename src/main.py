@@ -28,8 +28,15 @@ def arg_parser():
     parser.add_argument('--weight_decay', default=5e-4, help='Weight decay of the optimiser. default=5e-4')
     parser.add_argument('--train_ratio', type=float, default=0.8)
     parser.add_argument('--test_ratio', type=float, default=0.2)
+    parser.add_argument('--dropout', type=float, default=0.5, help='Dropout rate')
 
     args = parser.parse_args()
+    
+    if args.dataset == 'Liar':
+        args.epochs = 200
+        args.learning_rate = 0.001
+        args.dropout = 0.2
+        
     return args
 
 if __name__ == "__main__":
@@ -49,7 +56,7 @@ if __name__ == "__main__":
     acc_list, prec_list, rec_list, f1_list = [], [], [], []
     for i in range(10):
         print(f"\n--- Run {i+1}/10 ---")
-        model = Congrat(hidden_channels=args.hidden_channels, out_channels=2, num_layers=args.gnn_layers)
+        model = Congrat(hidden_channels=args.hidden_channels, out_channels=2, num_layers=args.gnn_layers, dropout_rate=args.dropout)
         model.to(device)
         hgraph.to(device)
         
