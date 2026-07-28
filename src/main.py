@@ -8,6 +8,10 @@ from torch.nn import Linear
 import torch.nn as nn
 import torch.nn.functional as F
 import random
+import os
+import csv
+import time
+from datetime import datetime
 from utils import load_dataset, shuffle_data
 from model import Congrat, train, test
 
@@ -49,6 +53,7 @@ if __name__ == "__main__":
 
 
     print("loading data")
+    start_total_time = time.time()
     hgraph = load_dataset(args.dataset)
     args.device = device
     hgraph = shuffle_data(hgraph, args)
@@ -81,10 +86,34 @@ if __name__ == "__main__":
     print("-" * 55)
     
     def print_stat(name, arr):
-        print(f"{name:<12} | {np.mean(arr):.4f}   | {np.std(arr):.4f}   | {np.min(arr):.4f}   | {np.max(arr):.4f}")
+        mean, std, mn, mx = np.mean(arr), np.std(arr), np.min(arr), np.max(arr)
+        print(f"{name:<12} | {mean:.4f}   | {std:.4f}   | {mn:.4f}   | {mx:.4f}")
+        return [name, f"{mean:.4f}", f"{std:.4f}", f"{mn:.4f}", f"{mx:.4f}"]
         
-    print_stat("Accuracy", acc_list)
-    print_stat("Precision", prec_list)
-    print_stat("Recall", rec_list)
-    print_stat("F1-Score", f1_list)
+    results_data = []
+    results_data.append(print_stat("Accuracy", acc_list))
+    results_data.append(print_stat("Precision", prec_list))
+    results_data.append(print_stat("Recall", rec_list))
+    results_data.append(print_stat("F1-Score", f1_list))
+    
+    end_total_time = time.time()
+    total_time_seconds = end_total_time - start_total_time
+    total_time_minutes = total_time_seconds / 60
+    print("-" * 55)
+    print(f"Total Execution Time: {total_time_seconds:.2f} seconds ({total_time_minutes:.2f} minutes)")
     print("="*55 + "\n")
+
+    # Lưu kết quả ra file CSV
+    csv_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "results.csv")
+    file_exists = os.path.exists(csv_file)
+    
+    with open(csv_file, mode='a', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            writer.writerow(['Timestamp', 'Dataset', 'Epochs', 'Learning Rate', 'Time (s)', 'Metric', 'Mean', 'Std', 'Min', 'Max'])
+        
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        for row in results_data:
+            writer.writerow([timestamp, args.dataset, args.epochs, args.learning_rate, f"{total_time_seconds:.2f}"] + row)
+            
+    print(f"Kết quả đã được lưu vào file: {os.path.abspath(csv_file)}\n")
