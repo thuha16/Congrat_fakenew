@@ -27,20 +27,25 @@ def sim(z1: torch.Tensor, z2: torch.Tensor):
     return torch.mm(z1, z2.t())
 
 def semi_loss(z1: torch.Tensor, z2: torch.Tensor):
-    # f = lambda x: torch.exp(x / torch.tensor(TAU, device = x.device))
-    # print(sim(z1,z1))
-    # refl_sim = f(sim(z1, z1))
-    # between_sim = f((z1, z2))
-    refl_sim = torch.exp(
-        sim(z1, z1) / 0.5
-    )
-    between_sim = torch.exp(
-        sim(z1, z2) / 0.5
-    )
+    f = lambda x: torch.exp(x)
+    refl_sim = f(sim(z1, z1))
+    between_sim = f(sim(z1, z2))
 
     return -torch.log(
         between_sim.diag()
         / (refl_sim.sum(1) + between_sim.sum(1) - refl_sim.diag()))
+
+class FocalLoss(torch.nn.Module):
+    def __init__(self, alpha=0.25, gamma=2.0):
+        super(FocalLoss, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+
+    def forward(self, inputs, targets):
+        ce_loss = F.cross_entropy(inputs, targets, reduction='none')
+        pt = torch.exp(-ce_loss)
+        focal_loss = self.alpha * (1 - pt) ** self.gamma * ce_loss
+        return focal_loss.mean()
 
 
 class Congrat(torch.nn.Module):
@@ -166,16 +171,22 @@ class Congrat(torch.nn.Module):
     
 
 def train(model, data, args):
-    # hyparameter: adjust
-    # a = 0.2
-    model.train()
+    import copy
+    if args.dataset == 'Liar':
+        criterion = FocalLoss()
+    else:
+        criterion = torch.nn.CrossEntropyLoss()
+        
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
-    # lossCL = SupContrasLoss()
-    # lossCL = ContrasLoss()
-    criterion = torch.nn.CrossEntropyLoss()
+    
+    best_val_loss = float('inf')
+    patience = 20
+    counter = 0
+    best_model_state = copy.deepcopy(model.state_dict())
+
     for epoch in range(args.epochs):
+        model.train()
         optimizer.zero_grad()
-        # out1, out2, out = model(data.x_dict, data.edge_index_dict)
         out1, out2, out3, out = model(data.x_dict, data.edge_index_dict)
         mask = data['news'].train_mask
 
@@ -185,15 +196,28 @@ def train(model, data, args):
         kg1_cl_loss = kg1_cl_loss.mean()
         kg2_cl_loss = kg2_cl_loss.mean()
         clf_loss = criterion(out[mask], data['news'].y[mask])
-        # if epoch >= 200:
-        #     loss = clf_loss
-        # else:
-        #     loss = (kg1_cl_loss + kg2_cl_loss) / 2
+        
         loss = args.alpha * (kg1_cl_loss + kg2_cl_loss) / 2  + clf_loss
-        # print("epoch", epoch, 'loss:', loss.detach().item())
-
         loss.backward()
         optimizer.step()
+        
+        # Early Stopping theo dõi Validation Loss
+        model.eval()
+        with torch.no_grad():
+            _, _, _, val_out = model(data.x_dict, data.edge_index_dict)
+            val_mask = data['news'].val_mask
+            val_loss = criterion(val_out[val_mask], data['news'].y[val_mask]).item()
+            
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            counter = 0
+            best_model_state = copy.deepcopy(model.state_dict())
+        else:
+            counter += 1
+            if counter >= patience:
+                # Phục hồi model tốt nhất khi Early Stopping kích hoạt
+                model.load_state_dict(best_model_state)
+                break
 
 def test(model, data, args):
     # _, _, out = model(data.x_dict, data.edge_index_dict)
