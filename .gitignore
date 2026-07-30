@@ -5,3 +5,6 @@ tmp
 data/pretrained
 Para_analysis.txt
 data/COVID19/completed_data
+data/Liar/completed_data
+data/Liar/Liar_Cleaned_Merged.csv
+CLAUDE.md

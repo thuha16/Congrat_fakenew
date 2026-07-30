@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Downloads the LIAR fake-news dataset, resuming on failure and stalls.
 # Downloads into a tmp staging dir first, then moves/extracts the finished
-# file into data/LIAR_PANTS/ only after a successful, complete download.
+# file into data/Liar/ only after a successful, complete download.
 set -uo pipefail
 
 URL="https://sites.cs.ucsb.edu/~william/data/liar_dataset.zip"
 TMP_DIR="${TMPDIR:-/tmp}/congrat_download_staging"
-FINAL_DIR="$(dirname "$0")/data/LIAR_PANTS"
+FINAL_DIR="$(dirname "$0")/data/Liar"
 TMP_OUT="$TMP_DIR/liar_dataset.zip"
 MAX_RETRIES=10
 POLL_INTERVAL=5 # seconds between speed samples

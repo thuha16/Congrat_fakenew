@@ -250,7 +250,7 @@ def test(model, data, args):
     auc = roc_auc_score(y, pred,)
     # Trích xuất thống kê Dataset
     num_news = data['news'].num_nodes
-    num_entities = data['entity'].num_nodes
+    num_entities = data['entities'].num_nodes
     num_topics = data['topic'].num_nodes
     num_fake = int(data['news'].y.sum().item())
     num_real = num_news - num_fake

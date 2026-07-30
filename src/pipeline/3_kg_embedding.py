@@ -67,10 +67,12 @@ def load_wikidata_embeddings(entity2id_path, entity2vec_path, target_qnodes, dim
 
 def main(args):
     data_dir = f"../data/{args.dataset}/completed_data"
-    
-    # ĐƯỜNG DẪN TỚI FILE WIKIDATA TRÊN SERVER (Tải từ OpenKE)
-    WIKIDATA_PRETRAINED_FILE = "../data/pretrained/wikidata5m_transe.txt"
-    
+
+    # ĐƯỜNG DẪN TỚI BỘ WIKIDATA ĐẦY ĐỦ DO OPENKE PRE-TRAIN (entity2id.txt + entity2vec.bin)
+    WIKIDATA_ENTITY2ID_FILE = "../data/pretrained/Wikidata/knowledge graphs/entity2id.txt"
+    WIKIDATA_ENTITY2VEC_FILE = "../data/pretrained/Wikidata/embeddings/dimension_100/transe/entity2vec.bin"
+    WIKIDATA_DIM = 100
+
     print("Loading intermediate data...")
     with open(os.path.join(data_dir, "intermediate_data.pkl"), 'rb') as f:
         data = pickle.load(f)

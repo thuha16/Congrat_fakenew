@@ -240,11 +240,16 @@ def load_dataset(dataset):
 def shuffle_data(data, args):
     # Shuffle the data before training.
     train_ratio = args.train_ratio
+    val_ratio = getattr(args, 'val_ratio', 0.1)
     mask = list(range(data['news'].y.shape[0]))
     random.shuffle(mask)
-    train_mask = mask[:int(train_ratio*len(mask))]
-    test_mask = mask[int(train_ratio*len(mask)):]
+    train_end = int((train_ratio - val_ratio) * len(mask))
+    val_end = int(train_ratio * len(mask))
+    train_mask = mask[:train_end]
+    val_mask = mask[train_end:val_end]
+    test_mask = mask[val_end:]
     data['news'].train_mask = torch.LongTensor(train_mask)
+    data['news'].val_mask = torch.LongTensor(val_mask)
     data['news'].test_mask = torch.LongTensor(test_mask)
 
     return data
