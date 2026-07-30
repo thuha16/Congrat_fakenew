@@ -35,12 +35,6 @@ def arg_parser():
     parser.add_argument('--dropout', type=float, default=0.5, help='Dropout rate')
 
     args = parser.parse_args()
-    
-    if args.dataset == 'Liar':
-        args.epochs = 200
-        args.learning_rate = 0.001
-        args.dropout = 0.2
-        
     return args
 
 if __name__ == "__main__":
@@ -61,6 +55,16 @@ if __name__ == "__main__":
     acc_list, prec_list, rec_list, f1_list = [], [], [], []
     for i in range(10):
         print(f"\n--- Run {i+1}/10 ---")
+        
+        # KHÓA HẠT GIỐNG NGẪU NHIÊN (Khử nhiễu đồ thị Liar)
+        seed = args.seed + i
+        torch.manual_seed(seed)
+        np.random.seed(seed)
+        random.seed(seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed(seed)
+            torch.cuda.manual_seed_all(seed)
+            
         model = Congrat(hidden_channels=args.hidden_channels, out_channels=2, num_layers=args.gnn_layers, dropout_rate=args.dropout)
         model.to(device)
         hgraph.to(device)
