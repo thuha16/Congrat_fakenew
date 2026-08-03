@@ -31,19 +31,6 @@ def semi_loss(z1: torch.Tensor, z2: torch.Tensor):
         between_sim.diag()
         / (refl_sim.sum(1) + between_sim.sum(1) - refl_sim.diag()))
 
-class FocalLoss(torch.nn.Module):
-    def __init__(self, alpha=0.25, gamma=2.0):
-        super(FocalLoss, self).__init__()
-        self.alpha = alpha
-        self.gamma = gamma
-
-    def forward(self, inputs, targets):
-        ce_loss = F.cross_entropy(inputs, targets, reduction='none')
-        pt = torch.exp(-ce_loss)
-        focal_loss = self.alpha * (1 - pt) ** self.gamma * ce_loss
-        return focal_loss.mean()
-
-
 class Congrat(torch.nn.Module):
     def __init__(self, hidden_channels, out_channels, num_layers, dropout_rate=0.5):
         super().__init__()
@@ -168,13 +155,16 @@ class Congrat(torch.nn.Module):
 
 def train(model, data, args):
     import copy
+    y_train = data['news'].y[data['news'].train_mask]
+    class_counts = torch.bincount(y_train, minlength=2).float()
+    class_weights = (class_counts.sum() / (2.0 * class_counts)).to(data['news'].y.device)
     if args.dataset == 'Liar':
-        criterion = FocalLoss()
+        criterion = torch.nn.CrossEntropyLoss(weight=class_weights)
     else:
         criterion = torch.nn.CrossEntropyLoss()
-        
+
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
-    
+
     best_val_loss = float('inf')
     patience = 20
     counter = 0
@@ -197,48 +187,44 @@ def train(model, data, args):
         loss.backward()
         optimizer.step()
         
-        # Early Stopping theo dõi Validation Loss
-        model.eval()
-        with torch.no_grad():
-            _, _, _, val_out = model(data.x_dict, data.edge_index_dict)
-            val_mask = data['news'].val_mask
-            val_loss = criterion(val_out[val_mask], data['news'].y[val_mask]).item()
-            
-        if val_loss < best_val_loss:
-            best_val_loss = val_loss
-            counter = 0
-            best_model_state = copy.deepcopy(model.state_dict())
-        else:
-            counter += 1
-            if counter >= patience:
-                # Phục hồi model tốt nhất khi Early Stopping kích hoạt
-                model.load_state_dict(best_model_state)
-                break
+        # Early Stopping theo dõi Validation Loss (Liar only — COVID19 trains
+        # the full args.epochs budget, matching its originally validated setup)
+        if args.dataset == 'Liar':
+            model.eval()
+            with torch.no_grad():
+                _, _, _, val_out = model(data.x_dict, data.edge_index_dict)
+                val_mask = data['news'].val_mask
+                val_loss = criterion(val_out[val_mask], data['news'].y[val_mask]).item()
+
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+                counter = 0
+                best_model_state = copy.deepcopy(model.state_dict())
+            else:
+                counter += 1
+                if counter >= patience:
+                    # Phục hồi model tốt nhất khi Early Stopping kích hoạt
+                    model.load_state_dict(best_model_state)
+                    break
 
 def test(model, data, args):
     # _, _, out = model(data.x_dict, data.edge_index_dict)
     _, _, _, out = model(data.x_dict, data.edge_index_dict)
-    pred = out[data['news'].test_mask].argmax(dim=1).cpu()
 
-    y = data['news'].y[[data['news'].test_mask]].cpu()
-    # pred_list = out[data['news'].test_mask].tolist()
-    # predict = []
     def softmax(p):
         e_x = torch.exp(p)
         partition_x = e_x.sum(1, keepdim=True)
         return e_x / partition_x
-    predict = softmax(out[data['news'].test_mask])
-    col, row = predict.shape
-    # print(col)
-    pred_list = []
-    for i in range(col):
-        pred_list.append(predict[i][1].cpu().tolist())
-    pred_list = torch.Tensor(pred_list)
 
-    # print("pred_list is", pred_list)
-    # print('label is', y)
+    # Fixed 0.5 cutoff (argmax). Tuning this against the validation split
+    # was tried alongside the class-weighted loss but the two corrections
+    # stacked and overshot (near-100% recall, accuracy below the majority
+    # baseline) — the weighted loss alone is sufficient.
+    best_thresh = 0.5
+    pred = out[data['news'].test_mask].argmax(dim=1).cpu()
 
-  
+    y = data['news'].y[[data['news'].test_mask]].cpu()
+
     acc = accuracy_score(y, pred)
     precision = precision_score(y, pred, )
     # 修改
@@ -255,7 +241,7 @@ def test(model, data, args):
     num_fake = int(data['news'].y.sum().item())
     num_real = num_news - num_fake
     
-    print(f"Testing Acc: {acc:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f},F1: {f1:.4f}")
+    print(f"Testing Acc: {acc:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f},F1: {f1:.4f}, Threshold: {best_thresh:.2f}")
     with open("./Para_analysis.txt", "a+", encoding="utf8") as f:
         f.write(f"Dataset Stats: #News={num_news}, #Fake={num_fake}, #Real={num_real}, #Entities={num_entities}, #Topics={num_topics} | ")
         f.write(f"epoch: {args.epochs}; hidden_channels: {args.hidden_channels} ; Acc:{acc:.4f}; Precision: {precision:.4f}; Recall: {recall:.4f}; F1: {f1:.4f} \n")
